@@ -19,15 +19,14 @@ from common_code.common.enums import FieldDescriptionType, ExecutionUnitTagName,
 from common_code.common.models import FieldDescription, ExecutionUnitTag
 
 # Imports required by the service's model
-# TODO: 1. ADD REQUIRED IMPORTS (ALSO IN THE REQUIREMENTS.TXT)
+from transformers import pipeline
 
 settings = get_settings()
-
+classifier = pipeline("summarization", model="philschmid/bart-large-cnn-samsum")
 
 class MyService(Service):
-    # TODO: 2. CHANGE THIS DESCRIPTION
     """
-    My service model
+    Text summarizer model
     """
 
     # Any additional fields must be excluded for Pydantic to work
@@ -36,58 +35,62 @@ class MyService(Service):
 
     def __init__(self):
         super().__init__(
-            # TODO: 3. CHANGE THE SERVICE NAME AND SLUG
-            name="My Service",
-            slug="my-service",
+            name="Text Summarizer",
+            slug="text-summarizer",
             url=settings.service_url,
             summary=api_summary,
             description=api_description,
             status=ServiceStatus.AVAILABLE,
-            # TODO: 4. CHANGE THE INPUT AND OUTPUT FIELDS, THE TAGS AND THE HAS_AI VARIABLE
             data_in_fields=[
-                FieldDescription(name="image", type=[FieldDescriptionType.IMAGE_PNG, FieldDescriptionType.IMAGE_JPEG]),
+                FieldDescription(name="text", type=[FieldDescriptionType.TEXT_PLAIN]),
             ],
             data_out_fields=[
-                FieldDescription(name="result", type=[FieldDescriptionType.APPLICATION_JSON]),
+                FieldDescription(name="result", type=[FieldDescriptionType.TEXT_PLAIN]),
             ],
             tags=[
                 ExecutionUnitTag(
-                    name=ExecutionUnitTagName.IMAGE_PROCESSING,
-                    acronym=ExecutionUnitTagAcronym.IMAGE_PROCESSING,
+                    name=ExecutionUnitTagName.NATURAL_LANGUAGE_PROCESSING,
+                    acronym=ExecutionUnitTagAcronym.NATURAL_LANGUAGE_PROCESSING,
                 ),
             ],
-            has_ai=False,
+            has_ai=True,
         )
         self.logger = get_logger(settings)
 
-    # TODO: 5. CHANGE THE PROCESS METHOD (CORE OF THE SERVICE)
     def process(self, data):
-        # NOTE that the data is a dictionary with the keys being the field names set in the data_in_fields
-        raw = data["image"].data
-        input_type = data["image"].type
-        # ... do something with the raw data
+        # Get the text to analyze from storage
+        text = data["text"].data
+        # Convert bytes to string
+        text = text.decode("utf-8")
 
-        # NOTE that the result must be a dictionary with the keys being the field names set in the data_out_fields
+        # Limit the text to 142 words
+        text = " ".join(text.split()[:500])
+
+        # Run the model 
+        result = classifier(text, max_length=100, min_length=5, do_sample=False)
+
+        # Convert the result to bytes
+        file_bytes = result[0]["summary_text"].encode("utf-8")
+
         return {
             "result": TaskData(
-                data=...,
-                type=FieldDescriptionType.APPLICATION_JSON
+                data=file_bytes,
+                type=FieldDescriptionType.TEXT_PLAIN
             )
         }
 
 
-# TODO: 6. CHANGE THE API DESCRIPTION AND SUMMARY
-api_description = """My service
-bla bla bla...
+api_summary = """
+Summarize the given text.
 """
-api_summary = """My service
-bla bla bla...
+
+api_description = """
+Summarize the given text using the HuggingFace transformers library with model bart-large-cnn-samsum.
 """
 
 # Define the FastAPI application with information
-# TODO: 7. CHANGE THE API TITLE, VERSION, CONTACT AND LICENSE
 app = FastAPI(
-    title="Sample Service API.",
+    title="Text summarizer API.",
     description=api_description,
     version="0.0.1",
     contact={
