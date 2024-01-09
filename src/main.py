@@ -24,6 +24,7 @@ from transformers import pipeline
 settings = get_settings()
 classifier = pipeline("summarization", model="philschmid/bart-large-cnn-samsum")
 
+
 class MyService(Service):
     """
     Text summarizer model
@@ -66,7 +67,7 @@ class MyService(Service):
         # Limit the text to 142 words
         text = " ".join(text.split()[:500])
 
-        # Run the model 
+        # Run the model
         result = classifier(text, max_length=100, min_length=5, do_sample=False)
 
         # Convert the result to bytes
