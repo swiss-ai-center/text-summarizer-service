@@ -55,6 +55,7 @@ class MyService(Service):
                 ),
             ],
             has_ai=True,
+            docs_url="https://docs.swiss-ai-center.ch/reference/services/text-summarizer/",
         )
         self._logger = get_logger(settings)
 
