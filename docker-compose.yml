@@ -1,6 +1,5 @@
 services:
   service:
-    container_name: text-summarizer-service
     build:
       context: .
       dockerfile: development.Dockerfile
