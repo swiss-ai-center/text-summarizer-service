@@ -1,6 +1,14 @@
 [project]
 name = "text-summarizer"
+version = "1.0.0"
 
+requires-python = "==3.10.*"
+dependencies = [
+    "common-code[test] @ git+https://github.com/swiss-ai-center/common-code.git@main",
+    "transformers==4.39.1",
+    "torch==2.2.1"
+
+]
 [tool.pytest.ini_options]
 pythonpath = [".", "src"]
 addopts = "--cov-config=.coveragerc --cov-report xml --cov-report term-missing --cov=./src"
